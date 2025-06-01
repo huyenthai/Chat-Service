@@ -7,5 +7,7 @@ namespace ChatService.Business.Interfaces
     {
         Task SaveMessageSync(ChatMessage message);
         Task<List<ChatMessage>> GetMessageAsync(string senderId, string receiverId);
+        Task<List<string>> GetContactUserIdsAsync(string userId);
+
     }
 }

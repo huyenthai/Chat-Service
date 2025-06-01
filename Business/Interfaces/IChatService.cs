@@ -6,5 +6,7 @@ namespace ChatService.Business.Interfaces
 
         Task SendMessageAsync(ChatMessage message);
         Task<List<ChatMessage>> GetChatHistoryAsync(string senderId, string receiverId);
+        Task<List<string>> GetChatContactsAsync(string userId);
+
     }
 }

@@ -25,7 +25,11 @@ namespace ChatService.Business.Services
         {
           return await chatRepository.GetMessageAsync(senderId, receiverId);
         }
+        public async Task<List<string>> GetChatContactsAsync(string userId)
+        {
+            return await chatRepository.GetContactUserIdsAsync(userId);
+        }
 
-       
+
     }
 }
