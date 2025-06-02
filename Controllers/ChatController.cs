@@ -35,7 +35,7 @@ namespace ChatService.Controllers
                 SenderId = senderId,
                 ReceiverId = dto.ReceiverId.Trim(),
                 Message = dto.Message,
-                ImageUrl = dto.ImageUrl,
+                BlobName = dto.BlobName,
                 MessageType = dto.MessageType,
                 TimeSent = DateTime.UtcNow
             };

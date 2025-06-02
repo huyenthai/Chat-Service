@@ -4,8 +4,9 @@
     {
         public string ReceiverId { get; set; }
         public string? Message { get; set; }
-        public string? ImageUrl { get; set; }
-        public string MessageType { get; set; } = "text";
 
+        public string? BlobName { get; set; } 
+
+        public string MessageType { get; set; } = "text";
     }
 }
