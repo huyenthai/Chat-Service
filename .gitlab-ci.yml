@@ -1,27 +1,14 @@
-image: mcr.microsoft.com/dotnet/sdk:8.0
-
-stages:
-  - build
-  - test
-  - dockerize
-  - deploy
-
-variables:
-  DOCKER_IMAGE_NAME: huyenthai01/chat-service  
-  PROJECT_PATH: src/ChatService/ChatService.csproj
-  TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
-  TAG_NAME: latest
-
-before_script:
-  - dotnet restore
-
 build:
   stage: build
+  tags:
+    - project
   script:
     - dotnet build $PROJECT_PATH --configuration Release
 
 test:
   stage: test
+  tags:
+    - project
   script:
     - dotnet test $TEST_PATH --configuration Release 
 
@@ -30,6 +17,8 @@ dockerize:
   image: docker:latest
   services:
     - docker:dind
+  tags:
+    - project
   script:
     - docker build -t $DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
   only:
@@ -40,6 +29,8 @@ deploy:
   image: docker:latest
   services:
     - docker:dind
+  tags:
+    - project
   script:
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker push "$DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
