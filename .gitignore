@@ -1,8 +1,41 @@
-.vs/
+# Build artifacts
 bin/
 obj/
 *.user
 *.suo
-*.exe
-*.dll
+*.cache
 *.pdb
+*.db
+
+# VS folders
+.vs/
+*.csproj.user
+
+# Rider/JetBrains
+.idea/
+
+# Test results
+TestResults/
+*.trx
+
+# Runtime files
+*.log
+*.pid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.tar
+.env
+docker-compose.override.yml
+
+# Node (if used in front-end)
+node_modules/
+
+# Publish output
+/app/publish/
+
+# User secrets
+secrets.json
