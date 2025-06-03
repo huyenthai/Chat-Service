@@ -23,7 +23,7 @@ build:
 test:
   stage: test
   script:
-    - dotnet test $TEST_PATH --configuration Release --no-build
+    - dotnet test $TEST_PATH --configuration Release 
 
 dockerize:
   stage: dockerize
