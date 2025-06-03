@@ -7,7 +7,7 @@ stages:
   - deploy
 
 variables:
-  DOCKER_IMAGE_NAME: huyenthai01/chat-service
+  DOCKER_IMAGE_NAME: huyenthai01/chat-service  
   PROJECT_PATH: src/ChatService/ChatService.csproj
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
