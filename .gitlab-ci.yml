@@ -12,14 +12,12 @@ variables:
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
 
-before_script:
-  - dotnet restore
-
 build:
   stage: build
   tags:
     - project
   script:
+    - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
 
 test:
