@@ -42,9 +42,7 @@ deploy:
     - docker:dind
   script:
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
-    - docker push "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
-    - docker push "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
+    - docker push "$DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
-
-
