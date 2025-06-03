@@ -1,5 +1,6 @@
 image: mcr.microsoft.com/dotnet/sdk:8.0
 
+
 stages:
   - build
   - test
@@ -29,7 +30,7 @@ test:
 
 dockerize:
   stage: dockerize
-  image: docker:latest
+  image: docker:latest 
   services:
     - docker:dind
   tags:
