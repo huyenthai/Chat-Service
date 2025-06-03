@@ -1,3 +1,20 @@
+image: mcr.microsoft.com/dotnet/sdk:8.0
+
+stages:
+  - build
+  - test
+  - dockerize
+  - deploy
+
+variables:
+  DOCKER_IMAGE_NAME: huyenthai01/chat-service
+  PROJECT_PATH: src/ChatService/ChatService.csproj
+  TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
+  TAG_NAME: latest
+
+before_script:
+  - dotnet restore
+
 build:
   stage: build
   tags:
