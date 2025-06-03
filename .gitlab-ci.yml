@@ -41,7 +41,7 @@ deploy:
   services:
     - docker:dind
   script:
-    - echo "${env:DOCKER_HUB_PASSWORD}" | docker login -u "${env:DOCKER_HUB_USERNAME}" --password-stdin
+    - docker login -u "${env:DOCKER_HUB_USERNAME}" -p "${env:DOCKER_HUB_PASSWORD}"
     - docker push "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
     - docker push "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
   only:
