@@ -29,7 +29,7 @@ test:
     - project
 
   script:
-    - dotnet test $TEST_PATH --configuration Release --no-build
+    - dotnet test $TEST_PATH --configuration Release 
 
 
 dockerize:
