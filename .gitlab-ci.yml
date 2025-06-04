@@ -31,22 +31,24 @@ dockerize:
   stage: dockerize
   image: docker:latest
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
   variables:
     DOCKER_HOST: tcp://docker:2375
   tags:
     - project
   script:
+    - docker version 
     - docker build -t $DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
   only:
     - branches
-
 
 deploy:
   stage: deploy
   image: docker:latest
   services:
-    - docker:dind
+    - name: docker:dind
+      command: ["--host=tcp://0.0.0.0:2375", "--host=unix:///var/run/docker.sock"]
   variables:
     DOCKER_HOST: tcp://docker:2375
   tags:
@@ -55,3 +57,5 @@ deploy:
     - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
     - docker push "$DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
+  only:
+    - branches
