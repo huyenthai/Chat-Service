@@ -17,16 +17,25 @@ before_script:
 
 build:
   stage: build
+  tags:
+    - project
+
   script:
     - dotnet build $PROJECT_PATH --configuration Release
 
 test:
   stage: test
+  tags:
+    - project
+
   script:
     - dotnet test $TEST_PATH --configuration Release --no-build
 
 dockerize:
   stage: dockerize
+  tags:
+    - project
+
   image: docker:latest
   services:
     - docker:dind
@@ -37,6 +46,9 @@ dockerize:
 
 deploy:
   stage: deploy
+  tags:
+    - project
+
   image: docker:latest
   services:
     - docker:dind
