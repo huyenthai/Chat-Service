@@ -31,6 +31,7 @@ test:
   script:
     - dotnet test $TEST_PATH --configuration Release --no-build
 
+
 dockerize:
   stage: dockerize
   tags:
