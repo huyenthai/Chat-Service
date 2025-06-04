@@ -26,25 +26,25 @@ test:
     - project
   script:
     - dotnet test $TEST_PATH --configuration Release 
+
 dockerize:
   stage: dockerize
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
   tags:
     - project
   script:
     - docker build -t $DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
+  only:
+    - branches
+
 
 deploy:
   stage: deploy
   image: docker:latest
   services:
     - docker:dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
   tags:
     - project
   script:
