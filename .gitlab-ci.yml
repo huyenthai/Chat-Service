@@ -68,6 +68,7 @@ sonarqube:
     - project
   image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
+    - apt-get update && apt-get install -y default-jre
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - dotnet sonarscanner begin /k:"chat-service" /d:sonar.host.url="$SONAR_HOST_URL" /d:sonar.login="$SONAR_TOKEN"
