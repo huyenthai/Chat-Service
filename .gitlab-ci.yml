@@ -62,6 +62,7 @@ deploy:
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
+
 sonarqube:
   stage: sonarqube
   tags:
@@ -72,15 +73,15 @@ sonarqube:
     - dotnet tool install --global dotnet-sonarscanner
     - dotnet tool install --global dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
-    - dotnet sonarscanner begin \
+    - |
+      dotnet sonarscanner begin \
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
         /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml" \
         /d:sonar.projectBaseDir="src/ChatService"
     - dotnet build $PROJECT_PATH
-    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --collect:"XPlat Code Coverage"
+    - dotnet test $TEST_PATH --collect:"XPlat Code Coverage"
     - reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:Cobertura
-    - ls -R coverage-report
-    - cat coverage-report/Cobertura.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+
