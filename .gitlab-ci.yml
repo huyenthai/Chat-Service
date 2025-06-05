@@ -12,23 +12,24 @@ variables:
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
 
-before_script:
-  - dotnet restore
-
 build:
   stage: build
   tags:
     - project
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
+    - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
 
 test:
   stage: test
   tags:
     - project
-
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
-    - dotnet test $TEST_PATH --configuration Release 
+    - dotnet restore
+    - dotnet test $TEST_PATH --configuration Release
+
 
 dockerize:
   stage: dockerize
