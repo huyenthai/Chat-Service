@@ -19,7 +19,6 @@ build:
   stage: build
   tags:
     - project
-
   script:
     - dotnet build $PROJECT_PATH --configuration Release
 
@@ -31,14 +30,11 @@ test:
   script:
     - dotnet test $TEST_PATH --configuration Release 
 
-
 dockerize:
   stage: dockerize
   tags:
     - project
   image: docker:latest
-  services:
-    - docker:dind
   script:
     - $tag1 = "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
     - $tag2 = "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
@@ -48,14 +44,12 @@ dockerize:
     - branches
 
 
-    
+
 deploy:
   stage: deploy
   tags:
     - project
   image: docker:latest
-  services:
-    - docker:dind
   script:
     - echo "${env:DOCKER_HUB_PASSWORD}" | docker login -u "${env:DOCKER_HUB_USERNAME}" --password-stdin
     - docker push ${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}
