@@ -7,14 +7,14 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Copy full solution and projects
-COPY . .          # includes ChatService.sln and src/ folder
+# Copy entire source
+COPY . .
 
-# Restore and publish the ChatService project
-RUN dotnet restore ChatService.sln
-RUN dotnet publish src/ChatService/ChatService.csproj -c Release -o /app/publish
+# Restore and publish
+RUN dotnet restore "./ChatService.sln"
+RUN dotnet publish "./src/ChatService/ChatService.csproj" -c Release -o /app/publish
 
-# Final runtime image
+# Final stage
 FROM base AS final
 WORKDIR /app
 COPY --from=build /app/publish .

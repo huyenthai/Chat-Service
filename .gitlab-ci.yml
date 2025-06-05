@@ -38,6 +38,8 @@ dockerize:
   image: docker:latest
   services:
     - docker:dind
+  variables:
+    DOCKER_BUILDKIT: 0
   script:
     - tag1="${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
     - tag2="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
@@ -45,7 +47,6 @@ dockerize:
     - docker build -t "$tag1" -t "$tag2" .
   only:
     - branches
-
 
 
 deploy:
