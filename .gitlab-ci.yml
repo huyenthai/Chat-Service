@@ -37,14 +37,12 @@ dockerize:
     - project
   image: docker:latest
   script:
-    - $tag1 = "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
-    - $tag2 = "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
-    - $context = "${env:CI_PROJECT_DIR}"
-    - docker build -t $tag1 -t $tag2 $context
+    - tag1="${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
+    - tag2="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
+    - context="${CI_PROJECT_DIR}"
+    - docker build -t "$tag1" -t "$tag2" "$context"
   only:
     - branches
-
-
 
 deploy:
   stage: deploy
@@ -52,8 +50,8 @@ deploy:
     - project
   image: docker:latest
   script:
-    - echo "${env:DOCKER_HUB_PASSWORD}" | docker login -u "${env:DOCKER_HUB_USERNAME}" --password-stdin
-    - docker push ${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}
-    - docker push ${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}
+    - echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    - docker push "$DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA"
+    - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
