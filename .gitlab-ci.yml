@@ -3,8 +3,10 @@ image: mcr.microsoft.com/dotnet/sdk:8.0
 stages:
   - build
   - test
+  - sonarqube
   - dockerize
   - deploy
+
 
 variables:
   DOCKER_IMAGE_NAME: huyenthai01/chat-service
@@ -59,3 +61,15 @@ deploy:
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
+
+sonarqube:
+  stage: sonarqube
+  tags:
+    - project
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  script:
+    - dotnet tool install --global dotnet-sonarscanner
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - dotnet sonarscanner begin /k:"chat-service" /d:sonar.host.url="$SONAR_HOST_URL" /d:sonar.login="$SONAR_TOKEN"
+    - dotnet build $PROJECT_PATH
+    - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
