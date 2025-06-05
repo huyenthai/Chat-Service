@@ -43,6 +43,7 @@ dockerize:
     - docker build -t "$tag1" -t "$tag2" "$context"
   only:
     - branches
+    
 
 deploy:
   stage: deploy
