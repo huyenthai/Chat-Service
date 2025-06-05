@@ -42,9 +42,11 @@ dockerize:
   script:
     - $tag1 = "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
     - $tag2 = "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
-    - docker build -t $tag1 -t $tag2 .
+    - $context = "${env:CI_PROJECT_DIR}"
+    - docker build -t $tag1 -t $tag2 $context
   only:
     - branches
+
 
 
 
