@@ -48,9 +48,6 @@ dockerize:
     - branches
 
 
-
-
-
 deploy:
   stage: deploy
   tags:
