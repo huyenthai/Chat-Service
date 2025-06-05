@@ -40,10 +40,11 @@ dockerize:
     - tag1="${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
     - tag2="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
     - context="${CI_PROJECT_DIR}"
-    - docker build -t "$tag1" -t "$tag2" "$context"
+    - docker build -t "$tag1" -t "$tag2" .
+
   only:
     - branches
-    
+
 
 deploy:
   stage: deploy
