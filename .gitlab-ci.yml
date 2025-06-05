@@ -76,4 +76,5 @@ sonarqube:
     - dotnet build $PROJECT_PATH
     - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --collect:"XPlat Code Coverage"
     - reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Cobertura
+    - ls -R coverage-report
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
