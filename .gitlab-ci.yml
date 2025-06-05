@@ -40,7 +40,9 @@ dockerize:
   services:
     - docker:dind
   script:
-    - docker build -t $DOCKER_IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
+    - $tag1 = "${env:DOCKER_IMAGE_NAME}:${env:CI_COMMIT_SHORT_SHA}"
+    - $tag2 = "${env:DOCKER_IMAGE_NAME}:${env:TAG_NAME}"
+    - docker build -t $tag1 -t $tag2 .
   only:
     - branches
 
