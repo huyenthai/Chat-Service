@@ -36,14 +36,15 @@ dockerize:
   tags:
     - project
   image: docker:latest
+  services:
+    - docker:dind
   script:
     - tag1="${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
     - tag2="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
-    - context="${CI_PROJECT_DIR}"
-    - docker build -t "$tag1" -t "$tag2" .
-
+    - docker build -t "$tag1" -t "$tag2" "$CI_PROJECT_DIR"
   only:
     - branches
+
 
 
 deploy:
