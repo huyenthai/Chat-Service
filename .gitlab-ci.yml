@@ -30,7 +30,8 @@ test:
   image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
     - dotnet restore
-    - dotnet test $TEST_PATH --configuration Release
+    - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage"
+
 
 
 dockerize:
@@ -61,7 +62,6 @@ deploy:
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
-
 sonarqube:
   stage: sonarqube
   tags:
@@ -70,7 +70,13 @@ sonarqube:
   script:
     - apt-get update && apt-get install -y default-jre
     - dotnet tool install --global dotnet-sonarscanner
+    - dotnet tool install --global dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
-    - dotnet sonarscanner begin /k:"chat-service" /d:sonar.host.url="$SONAR_HOST_URL" /d:sonar.login="$SONAR_TOKEN"
+    - dotnet sonarscanner begin /k:"chat-service" \
+        /d:sonar.host.url="$SONAR_HOST_URL" \
+        /d:sonar.login="$SONAR_TOKEN" \
+        /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
     - dotnet build $PROJECT_PATH
+    - dotnet test $TEST_PATH --no-build --collect:"XPlat Code Coverage"
+    - reportgenerator -reports:**/coverage.cobertura.xml -targetdir:coverage-report -reporttypes:Cobertura
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
