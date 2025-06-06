@@ -76,14 +76,15 @@ sonarqube:
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
         /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
-        /d:sonar.coverage.exclusions="**/*Tests.cs,**/Tests/**"
+        /d:sonar.coverage.exclusions="**/*Tests.cs,**/Tests/**" \
+        /d:sonar.sources="src/" \
+        /d:sonar.tests="src/" \
+        /d:sonar.test.inclusions="**/*Tests.cs" \
+        /d:sonar.scanner.scanAll=
     - dotnet restore
     - dotnet build --configuration Release
     - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory "./TestResults/"
     - find . -name "coverage.cobertura.xml" -type f
     - ls -la ./TestResults/
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
-
-
-
 
