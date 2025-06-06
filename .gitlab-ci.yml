@@ -73,12 +73,17 @@ sonarcloud:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - mkdir -p TestResults
-    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.cobertura.reportsPaths="TestResults/**/coverage.cobertura.xml"
+    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml"
+    # Build and test
     - dotnet build --configuration Debug
     - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+    # Copy the coverage report to a known path
+    - find TestResults -name "coverage.cobertura.xml" -exec cp {} TestResults/coverage.cobertura.xml \;
     - ls -R TestResults/
-    - find TestResults -name "*.cobertura.xml" || echo "Coverage file not found"
+    - cat TestResults/coverage.cobertura.xml | head -n 10 || echo "Coverage file not found"
+    # End SonarCloud analysis
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
+
 
 
 
