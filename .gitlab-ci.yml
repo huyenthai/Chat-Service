@@ -78,11 +78,10 @@ sonarqube:
         /d:sonar.cs.cobertura.reportsPaths="TestResults/**/coverage.cobertura.xml"
     - dotnet build $PROJECT_PATH
     - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory "TestResults"
+    - ls -l TestResults/**/coverage.cobertura.xml
+    - cat TestResults/**/coverage.cobertura.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
-  artifacts:
-    paths:
-      - TestResults/
-    when: always
+
 
 
 
