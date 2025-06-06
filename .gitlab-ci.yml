@@ -76,12 +76,11 @@ sonarqube:
       /k:"chat-service" \
       /d:sonar.host.url="$SONAR_HOST_URL" \
       /d:sonar.login="$SONAR_TOKEN" \
-      /d:sonar.coverageReportPaths="coverage-report/Cobertura.xml"
-
+      /d:sonar.cs.opencover.reportsPaths="coverage-report/Summary.xml"
     - dotnet build $PROJECT_PATH
     - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory "TestResults"
     - COVERAGE_FILE=$(find TestResults -name "coverage.cobertura.xml" | head -n 1)
-    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:coverage-report -reporttypes:Cobertura
+    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:coverage-report -reporttypes:OpenCover
     - sed -i 's|C:\\\\Users\\\\31645\\\\Desktop\\\\Messaging application\\\\chat-service\\\\||g' coverage-report/Cobertura.xml
     - ls -lh coverage-report/Cobertura.xml
     - cat coverage-report/Cobertura.xml
