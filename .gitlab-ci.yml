@@ -72,7 +72,7 @@ sonarcloud:
     - mkdir -p TestResults
     - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
     - dotnet build
-    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Release --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
+    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Release --no-build "/p:CollectCoverage=true" "/p:CoverletOutputFormat=opencover" "/p:CoverletOutput=TestResults/coverage.opencover.xml"
     - ls -l TestResults/
     - cat TestResults/coverage.opencover.xml | head -n 10 || echo "Coverage file not found"
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
