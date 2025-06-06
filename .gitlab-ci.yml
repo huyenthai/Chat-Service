@@ -76,9 +76,10 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml" \
+        /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
     - dotnet build $PROJECT_PATH
     - dotnet test $TEST_PATH --collect:"XPlat Code Coverage"
     - reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:Cobertura
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+
 
