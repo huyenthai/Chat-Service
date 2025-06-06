@@ -66,15 +66,17 @@ sonarcloud:
   tags:
     - project
   image: mcr.microsoft.com/dotnet/sdk:8.0
+  variables:
+    GIT_DEPTH: 0
   script:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - mkdir -p TestResults
-    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
+    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.opencover.reportsPaths="TestResults/**/coverage.cobertura.xml"
     - dotnet build --configuration Debug
-    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
-    - ls -l TestResults/
-    - cat TestResults/coverage.opencover.xml | head -n 10 || echo "Coverage file not found"
+    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+    - ls -R TestResults/
+    - find TestResults -name "*.cobertura.xml" || echo "Coverage file not found"
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
 
 
