@@ -63,7 +63,7 @@ deploy:
 
 sonarcloud:
   image: mcr.microsoft.com/dotnet/sdk:8.0
-  stage: test
+  stage: sonarcloud
   script:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
