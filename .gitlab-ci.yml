@@ -77,7 +77,7 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.opencover.reportsPaths="coverage.cobertura.xml" \
+        /d:sonar.cs.cobertura.reportsPaths="coverage.cobertura.xml" \
         /d:sonar.sources="src/ChatService" \
         /d:sonar.tests="src/ChatService.Tests"
     - dotnet restore
@@ -85,6 +85,5 @@ sonarqube:
     - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory "./TestResults/"
     - cp ./TestResults/**/coverage.cobertura.xml ./coverage.cobertura.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
-
 
 
