@@ -66,7 +66,7 @@ sonarqube:
   tags:
     - project
   image: mcr.microsoft.com/dotnet/sdk:8.0
-  script:
+    script:
     - apt-get update && apt-get install -y default-jre
     - dotnet tool install --global dotnet-sonarscanner
     - dotnet tool install --global dotnet-reportgenerator-globaltool
@@ -76,13 +76,13 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.opencover.reportsPaths="coverage-report/Cobertura.xml"
+        /d:sonar.cs.opencover.reportsPaths="coverage-report/Summary.xml"
     - dotnet build $PROJECT_PATH
     - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory "TestResults"
     - COVERAGE_FILE=$(find TestResults -name "coverage.cobertura.xml" | head -n 1)
-    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:coverage-report -reporttypes:Cobertura
-    - sed -i 's|C:\\\\Users\\\\31645\\\\Desktop\\\\Messaging application\\\\chat-service\\\\||g' coverage-report/Cobertura.xml
-    - ls -lh coverage-report/Cobertura.xml
+    - reportgenerator -reports:"$COVERAGE_FILE" -targetdir:coverage-report -reporttypes:OpenCover
+    - ls -lh coverage-report/
+    - cat coverage-report/Summary.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
   artifacts:
     paths:
