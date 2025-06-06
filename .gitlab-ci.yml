@@ -75,11 +75,12 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.cobertura.reportsPaths="TestResults/**/coverage.cobertura.xml"
+        /d:sonar.cs.cobertura.reportsPaths="src/ChatService.Tests/TestResults/**/coverage.cobertura.xml"
     - dotnet build $PROJECT_PATH
-    - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory "TestResults"
-    - ls -l TestResults/**/coverage.cobertura.xml
-    - cat TestResults/**/coverage.cobertura.xml
+    - dotnet test $TEST_PATH --no-build --collect:"XPlat Code Coverage" --results-directory "TestResults"
+    - find . -name "coverage.cobertura.xml"
+    - ls -l src/ChatService.Tests/TestResults/**/coverage.cobertura.xml
+    - cat src/ChatService.Tests/TestResults/**/coverage.cobertura.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
 
 
