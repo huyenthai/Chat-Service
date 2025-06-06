@@ -70,32 +70,25 @@ sonarcloud:
   variables:
     GIT_DEPTH: 0
   script:
-    # Install the SonarScanner globally
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
-
-    # Create test results directory
     - mkdir -p TestResults
 
-    # Begin Sonar analysis
     - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml"
 
-    # Build the application
     - dotnet build --configuration Debug
 
-    # Run tests and collect coverage
     - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --no-build --configuration Debug --collect:"XPlat Code Coverage" --results-directory TestResults
 
-    # Move the actual coverage file to expected location
+    # Fix: Copy cobertura file to correct path
     - find TestResults -name "coverage.cobertura.xml" -exec cp {} TestResults/coverage.cobertura.xml \;
 
-    # Optional: debug output
-    - ls -R TestResults/
-    - cat TestResults/coverage.cobertura.xml | head -n 20 || echo "Coverage file not found"
+    # Fix: Normalize source path for SonarCloud
+    - sed -i 's|<source>.*src/ChatService/|<source>src/ChatService/|' TestResults/coverage.cobertura.xml
 
-    # End Sonar analysis
+    - cat TestResults/coverage.cobertura.xml | head -n 10 || echo "Coverage file not found"
+
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
-
 
 
 
