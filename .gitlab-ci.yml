@@ -70,11 +70,7 @@ sonarcloud:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - mkdir -p TestResults
-    - dotnet sonarscanner begin \
-        /k:"chat-service" \
-        /o:"messaging" \
-        /d:sonar.login="$SONAR_CLOUD_TOKEN" \
-        /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
+    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
     - dotnet build
     - dotnet test \
         --collect:"XPlat Code Coverage" \
