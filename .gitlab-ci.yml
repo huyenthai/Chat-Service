@@ -32,8 +32,6 @@ test:
     - dotnet restore
     - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage"
 
-
-
 dockerize:
   stage: dockerize
   tags:
