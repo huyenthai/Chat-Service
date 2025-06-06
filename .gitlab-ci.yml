@@ -73,10 +73,11 @@ sonarqube:
     - export PATH="$PATH:/root/.dotnet/tools"
     - |
       dotnet sonarscanner begin \
-        /k:"chat-service" \
-        /d:sonar.host.url="$SONAR_HOST_URL" \
-        /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.cobertura.reportsPaths="coverage-report/Cobertura.xml"
+      /k:"chat-service" \
+      /d:sonar.host.url="$SONAR_HOST_URL" \
+      /d:sonar.login="$SONAR_TOKEN" \
+      /d:sonar.coverageReportPaths="coverage-report/Cobertura.xml"
+
     - dotnet build $PROJECT_PATH
     - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory "TestResults"
     - COVERAGE_FILE=$(find TestResults -name "coverage.cobertura.xml" | head -n 1)
