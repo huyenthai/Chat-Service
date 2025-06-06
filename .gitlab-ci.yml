@@ -61,6 +61,7 @@ deploy:
   only:
     - branches
 
+
 sonarcloud:
   stage: sonarcloud
   tags:
