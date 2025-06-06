@@ -60,7 +60,7 @@ deploy:
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
-    
+
 sonarqube:
   stage: sonarqube
   tags:
@@ -77,14 +77,16 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.vscoveragexml.reportsPaths="coverage.cobertura.xml" \
+        /d:sonar.cs.cobertura.reportsPaths="coverage.cobertura.xml" \
         /d:sonar.sources="src/ChatService" \
         /d:sonar.tests="src/ChatService.Tests"
     - dotnet restore
     - dotnet build --configuration Release
-    - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory "./TestResults/"
-    - cp ./TestResults/**/coverage.cobertura.xml ./coverage.cobertura.xml
+    - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory "TestResults"
+    - cp TestResults/**/coverage.cobertura.xml ./coverage.cobertura.xml
+    - cat coverage.cobertura.xml | head -n 10
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+
 
 
 
