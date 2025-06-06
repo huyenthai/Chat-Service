@@ -62,23 +62,24 @@ deploy:
     - branches
 
 sonarcloud:
-  image: mcr.microsoft.com/dotnet/sdk:8.0
   stage: sonarcloud
   tags:
     - project
+  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
+    - mkdir -p TestResults
     - dotnet sonarscanner begin \
         /k:"chat-service" \
-        /o:"your-org-key" \
+        /o:"messaging" \
         /d:sonar.login="$SONAR_CLOUD_TOKEN" \
         /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
-    - dotnet restore
     - dotnet build
-    - dotnet test --no-build /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/
+    - dotnet test \
+        --collect:"XPlat Code Coverage" \
+        --results-directory TestResults
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
-
 
 
 
