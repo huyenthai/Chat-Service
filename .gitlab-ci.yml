@@ -86,8 +86,8 @@ sonarqube:
       dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Release \
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
-        /p:CoverletOutput=../../TestResults/coverage \
-        /p:ExcludeByAttribute="GeneratedCodeAttribute,CompilerGeneratedAttribute"
+        /p:CoverletOutput="../../TestResults/coverage" \
+        "/p:ExcludeByAttribute=GeneratedCodeAttribute,CompilerGeneratedAttribute"
     - cat TestResults/coverage.cobertura.xml | head -n 10
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
 
