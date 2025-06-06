@@ -66,6 +66,8 @@ sonarqube:
   tags:
     - project
   image: mcr.microsoft.com/dotnet/sdk:8.0
+  variables:
+    GIT_DEPTH: 0
   script:
     - apt-get update && apt-get install -y default-jre
     - dotnet tool install --global dotnet-sonarscanner
@@ -75,17 +77,14 @@ sonarqube:
         /k:"chat-service" \
         /d:sonar.host.url="$SONAR_HOST_URL" \
         /d:sonar.login="$SONAR_TOKEN" \
-        /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" \
-        /d:sonar.coverage.exclusions="**/*Tests.cs,**/Tests/**" \
-        /d:sonar.sources="src/" \
-        /d:sonar.tests="src/" \
-        /d:sonar.test.inclusions="**/*Tests.cs" \
-        /d:sonar.scanner.scanAll=false
+        /d:sonar.cs.opencover.reportsPaths="coverage.cobertura.xml" \
+        /d:sonar.sources="src/ChatService" \
+        /d:sonar.tests="src/ChatService.Tests"
     - dotnet restore
     - dotnet build --configuration Release
     - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory "./TestResults/"
-    - find . -name "coverage.cobertura.xml" -type f
-    - ls -la ./TestResults/
+    - cp ./TestResults/**/coverage.cobertura.xml ./coverage.cobertura.xml
     - dotnet sonarscanner end /d:sonar.login="$SONAR_TOKEN"
+
 
 
