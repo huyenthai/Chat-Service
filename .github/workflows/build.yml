@@ -98,12 +98,7 @@ jobs:
         with:
           name: html-coverage-report
           path: coverage
-
-
-
-
-
-
+          
   docker-security:
     runs-on: ubuntu-latest
     steps:
