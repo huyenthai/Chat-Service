@@ -9,10 +9,13 @@ on:
 env:
   PROJECT_PATH: src/ChatService/ChatService.csproj
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
+  DOCKER_IMAGE_NAME: huyenthai01/chat-service
+  TAG_NAME: latest
 
 jobs:
-  build:
+  build-and-analyze:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -22,17 +25,17 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Install SonarScanner and ReportGenerator
+      - name: Install tools
         run: |
           dotnet tool install --global dotnet-sonarscanner
           dotnet tool install --global dotnet-reportgenerator-globaltool
         env:
           DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
-      - name: Add tools to PATH
+      - name: Add dotnet tools to PATH
         run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
-      - name: Begin SonarCloud analysis
+      - name: Start SonarCloud analysis
         run: |
           dotnet sonarscanner begin \
             /k:"chat-service" \
@@ -40,19 +43,27 @@ jobs:
             /d:sonar.login="${{ secrets.SONAR_CLOUD_TOKEN }}" \
             /d:sonar.cs.opencover.reportsPaths="coverage/coverage.opencover.xml"
 
-      - name: Build and Test
+      - name: Build and test
         run: |
           dotnet build $PROJECT_PATH --configuration Release
-          dotnet test $TEST_PATH --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" --results-directory TestResults
+          dotnet test $TEST_PATH --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
 
-      - name: Generate OpenCover coverage report
+      - name: Generate coverage reports
         run: |
-          mkdir -p coverage
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
-            -reporttypes:"opencover"
+            -reporttypes:"Cobertura;opencover"
 
       - name: End SonarCloud analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_CLOUD_TOKEN }}"
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          docker build -t $DOCKER_IMAGE_NAME:$SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
+          docker push $DOCKER_IMAGE_NAME:$SHORT_SHA
+          docker push $DOCKER_IMAGE_NAME:$TAG_NAME
