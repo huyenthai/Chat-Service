@@ -67,7 +67,7 @@ jobs:
             -reporttypes:"Cobertura;HtmlInline_AzurePipelines"
 
       - name: Rename report for Codacy
-        run: mv coverage/Cobertura.xml coverage/coverage.xml
+        run: mv coverage/Cobertura.xml coverage/cobertura.xml
 
       - name: List generated files (debug)
         run: ls -R coverage
