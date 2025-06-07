@@ -54,6 +54,7 @@ jobs:
                           -targetdir:coveragereport \
                           -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
       - name: Upload coverage to Codacy
+        shell: bash
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | sh
           ./codacy-coverage-reporter report \
