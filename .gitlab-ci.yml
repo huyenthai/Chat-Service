@@ -3,10 +3,9 @@ image: mcr.microsoft.com/dotnet/sdk:8.0
 stages:
   - build
   - test
-  - sonarcloud
+  - analyze
   - dockerize
   - deploy
-
 
 variables:
   DOCKER_IMAGE_NAME: huyenthai01/chat-service
@@ -14,24 +13,49 @@ variables:
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
 
+# Build
 build:
   stage: build
   tags:
     - project
-  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
     - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
 
-test:
+# Run Unit Tests + Coverage
+test-coverage:
   stage: test
   tags:
     - project
-  image: mcr.microsoft.com/dotnet/sdk:8.0
   script:
-    - dotnet restore
-    - dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage"
+    - dotnet test $TEST_PATH --collect:"XPlat Code Coverage" --results-directory TestResults
+    - dotnet tool install -g dotnet-reportgenerator-globaltool
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:HtmlInline_AzurePipelines;Cobertura
 
+# Static Code Analysis (Style + OWASP)
+static-analysis:
+  stage: analyze
+  tags:
+    - project
+  script:
+    - dotnet tool install -g dotnet-format
+    - dotnet format --verify-no-changes
+    - dotnet tool install -g Microsoft.DevSkim.CLI
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - devskim analyze --path src/ --output sarif
+
+# Dependency Security
+dependency-scan:
+  stage: analyze
+  tags:
+    - project
+  script:
+    - dotnet tool install --global dotnet-outdated-tool
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - dotnet outdated --include-auto-references
+
+# Docker Build
 dockerize:
   stage: dockerize
   tags:
@@ -49,6 +73,24 @@ dockerize:
   only:
     - branches
 
+# Docker Image Security Scan
+docker-security:
+  stage: analyze
+  tags:
+    - project
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - apk add --no-cache curl
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - tag="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
+    - docker pull "$tag" || echo "Image not found, skipping pull"
+    - trivy image "$tag" || echo "Trivy scan completed with warnings"
+  only:
+    - branches
+
+# Push Docker Image
 deploy:
   stage: deploy
   tags:
@@ -60,41 +102,3 @@ deploy:
     - docker push "$DOCKER_IMAGE_NAME:$TAG_NAME"
   only:
     - branches
-
-sonarcloud:
-  stage: sonarcloud
-  tags:
-    - project
-  image: mcr.microsoft.com/dotnet/sdk:8.0
-  variables:
-    GIT_DEPTH: 0
-  script:
-    - dotnet tool install --global dotnet-sonarscanner
-    - export PATH="$PATH:/root/.dotnet/tools"
-    - mkdir -p TestResults
-    - |
-      dotnet sonarscanner begin \
-        /k:"chat-service" \
-        /o:"messaging" \
-        /d:sonar.login="$SONAR_CLOUD_TOKEN" \
-        /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.cobertura.xml" \
-        /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.cobertura.xml" \
-        /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml" \
-        /d:sonar.coverage.exclusions="**/*.Tests.cs"
-    - dotnet build --configuration Debug
-    - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build --collect:"XPlat Code Coverage" --results-directory src/ChatService.Tests/TestResults
-    - find src/ChatService.Tests/TestResults -name "coverage.cobertura.xml" -exec cp {} TestResults/coverage.cobertura.xml \;
-    # Fix the <source> path to be relative
-    - sed -i 's|<source>.*src/ChatService/|<source>src/ChatService/|' TestResults/coverage.cobertura.xml
-    # Fix filename paths to start from project root
-    - sed -i 's|filename="[^"]*/src/ChatService/|filename="src/ChatService/|' TestResults/coverage.cobertura.xml
-    - cat TestResults/coverage.cobertura.xml | head -n 20
-    - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
-
-
-
-
-
-
-
-
