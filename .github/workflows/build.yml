@@ -98,7 +98,7 @@ jobs:
         with:
           name: html-coverage-report
           path: coverage
-          
+
   docker-security:
     runs-on: ubuntu-latest
     steps:
@@ -116,6 +116,7 @@ jobs:
         with:
           name: trivy-report
           path: security-reports/trivy-report.json
+
 
   docker-image-and-push:
     runs-on: ubuntu-latest
