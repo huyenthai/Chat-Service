@@ -55,10 +55,11 @@ jobs:
                           -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
       - name: Upload coverage to Codacy
         shell: bash
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | bash
           ./codacy-coverage-reporter report \
-            --project-token ${{ secrets.CODACY_PROJECT_TOKEN }} \
             --coverage-reports TestResults/**/coverage.cobertura.xml
       - uses: actions/upload-artifact@v4
         with:
