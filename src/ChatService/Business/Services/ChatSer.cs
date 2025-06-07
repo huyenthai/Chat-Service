@@ -23,7 +23,7 @@ namespace ChatService.Business.Services
                 throw new ArgumentException("Invalid message or receiver ID");
             }
             await chatRepository.SaveMessageSync(message);
-            var client = hub.Clients.User(message.ReceiverId);
+            var client = hub?.Clients?.User(message.ReceiverId);
             if (client != null)
             {
                 await client.SendAsync("ReceiveMessage", message);

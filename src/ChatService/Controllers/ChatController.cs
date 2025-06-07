@@ -23,12 +23,21 @@ namespace ChatService.Controllers
         {
             Console.WriteLine("Hit SendMessages endpoint");
 
-            if (dto == null ||
-                string.IsNullOrWhiteSpace(dto.ReceiverId) ||
-                string.IsNullOrWhiteSpace(dto.MessageType))
+            if (dto == null)
             {
-                return BadRequest("Missing required fields.");
+                return BadRequest("Message data is required.");
             }
+
+            if (string.IsNullOrWhiteSpace(dto.ReceiverId))
+            {
+                return BadRequest("ReceiverId is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.MessageType))
+            {
+                return BadRequest("MessageType is required.");
+            }
+
 
             var senderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
             if (string.IsNullOrWhiteSpace(senderId))
@@ -39,10 +48,10 @@ namespace ChatService.Controllers
             var message = new ChatMessage
             {
                 SenderId = senderId,
-                ReceiverId = dto.ReceiverId?.Trim() ?? "",
-                Message = dto.Message ?? "",
-                BlobName = dto.BlobName ?? "",
-                MessageType = dto.MessageType,
+                ReceiverId = dto.ReceiverId?.Trim() ?? string.Empty,
+                Message = dto.Message ?? string.Empty,
+                BlobName = dto.BlobName ?? string.Empty,
+                MessageType = dto.MessageType ?? string.Empty,
                 TimeSent = DateTime.UtcNow
             };
 
@@ -61,7 +70,7 @@ namespace ChatService.Controllers
                 return BadRequest("Receiver ID is required");
             }
 
-            receiverId = receiverId.Trim();
+            receiverId = receiverId?.Trim() ?? string.Empty;
 
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId))
             {
