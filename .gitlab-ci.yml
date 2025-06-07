@@ -32,10 +32,10 @@ code-quality:
     - dotnet tool install -g dotnet-format
     - dotnet format --verify-no-changes
 
-    # Install DevSkim CLI manually
+    # Install DevSkim CLI manually from GitHub
     - apt-get update && apt-get install -y wget unzip
-    - wget https://github.com/microsoft/DevSkim/releases/download/v1.0.16/DevSkim-CLI-linux-x64.zip
-    - unzip DevSkim-CLI-linux-x64.zip -d devskim
+    - wget https://github.com/microsoft/DevSkim/releases/download/v1.0.16/DevSkim-CLI-linux-x64-v1.0.16.zip
+    - unzip DevSkim-CLI-linux-x64-v1.0.16.zip -d devskim
     - chmod +x devskim/DevSkim
     - mkdir -p security-reports
     - ./devskim/DevSkim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
@@ -43,6 +43,7 @@ code-quality:
     paths:
       - security-reports/devskim.sarif
     expire_in: 1 week
+
 
 
 # Unit Test + Coverage Report
