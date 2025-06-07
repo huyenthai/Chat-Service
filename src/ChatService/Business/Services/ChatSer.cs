@@ -9,11 +9,13 @@ namespace ChatService.Business.Services
     {
         private readonly IChatRepository chatRepository;
         private readonly IHubContext<ChatHub> hub;
+
         public ChatSer(IChatRepository chatRepository, IHubContext<ChatHub> hub)
         {
             this.chatRepository = chatRepository;
             this.hub = hub;
         }
+
         public async Task SendMessageAsync(ChatMessage message)
         {
             await chatRepository.SaveMessageSync(message);
@@ -21,20 +23,15 @@ namespace ChatService.Business.Services
                 .User(message.ReceiverId)
                 .SendAsync("ReceiveMessage", message);
         }
+
         public async Task<List<ChatMessage>> GetChatHistoryAsync(string senderId, string receiverId)
         {
-          return await chatRepository.GetMessageAsync(senderId, receiverId);
+            return await chatRepository.GetMessageAsync(senderId, receiverId);
         }
+
         public async Task<List<string>> GetChatContactsAsync(string userId)
         {
             return await chatRepository.GetContactUserIdsAsync(userId);
         }
-        public class Calculator
-        {
-            public int Add(int a, int b) => a + b;
-        }
-
-
-
     }
 }

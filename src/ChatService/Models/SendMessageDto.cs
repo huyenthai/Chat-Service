@@ -2,10 +2,11 @@
 {
     public class SendMessageDto
     {
-        public string ReceiverId { get; set; }
+        public required string ReceiverId { get; set; }
+
         public string? Message { get; set; }
 
-        public string? BlobName { get; set; } 
+        public string? BlobName { get; set; }
 
         public string MessageType { get; set; } = "text";
     }
