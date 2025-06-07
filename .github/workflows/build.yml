@@ -65,7 +65,9 @@ jobs:
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
-            -reporttypes:"Cobertura;HtmlInline_AzurePipelines"
+            -reporttypes:"Cobertura;HtmlInline_AzurePipelines" \
+            -reportfile:"coverage.xml"
+
 
       - name: List generated files (debug)
         run: ls -R coverage
@@ -76,21 +78,18 @@ jobs:
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | bash
 
-          mv coverage/Cobertura.xml coverage/cobertura.xml
-
-          if [ ! -f coverage/cobertura.xml ]; then
-            echo "coverage/cobertura.xml not found"
+          if [ ! -f coverage/coverage.xml ]; then
+            echo "coverage/coverage.xml not found"
             exit 1
           fi
 
-          echo "Found Cobertura report"
+          echo "Found coverage report"
           /home/runner/.cache/codacy/coverage-reporter/14.1.0/codacy-coverage-reporter \
             report \
             --project-token $CODACY_PROJECT_TOKEN \
             --commit-uuid ${{ github.sha }} \
             --language CSharp \
-            -r coverage/cobertura.xml
-
+            -r coverage/coverage.xml
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
