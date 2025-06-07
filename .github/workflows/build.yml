@@ -76,8 +76,11 @@ jobs:
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | bash
 
-          if [ ! -f coverage/Cobertura.xml ]; then
-            echo "coverage/Cobertura.xml not found"
+          # Rename to lowercase to match Codacy expectations
+          mv coverage/Cobertura.xml coverage/cobertura.xml
+
+          if [ ! -f coverage/cobertura.xml ]; then
+            echo "coverage/cobertura.xml not found"
             exit 1
           fi
 
@@ -86,7 +89,7 @@ jobs:
             report \
             --project-token $CODACY_PROJECT_TOKEN \
             --commit-uuid ${{ github.sha }} \
-            -r coverage/Cobertura.xml
+            -r coverage/cobertura.xml
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
