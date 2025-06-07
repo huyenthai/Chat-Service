@@ -59,15 +59,16 @@ jobs:
       - name: Install ReportGenerator
         run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-      - name: Convert Coverage to Cobertura XML
+      - name: Generate Cobertura Report
         run: |
+          mkdir -p coverage
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
-            -targetdir:"coveragereport" \
+            -targetdir:"coverage" \
             -reporttypes:"Cobertura;HtmlInline_AzurePipelines"
 
-      - name: List coverage output files (debug step)
-        run: ls -R TestResults
+      - name: List generated files (debug)
+        run: ls -R coverage
 
       - name: Upload coverage to Codacy
         shell: bash
@@ -76,21 +77,20 @@ jobs:
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | bash
 
-          REPORT_FILE=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
-
-          if [ -z "$REPORT_FILE" ]; then
-            echo " Coverage report not found"
+          if [ ! -f coverage/Cobertura.xml ]; then
+            echo "coverage/Cobertura.xml not found"
             exit 1
           fi
 
-          echo "Found coverage report: $REPORT_FILE"
-          ./codacy-coverage-reporter report -r "$REPORT_FILE"
+          echo "Found Cobertura report"
+          ./codacy-coverage-reporter report -r coverage/Cobertura.xml
 
-      - name: Upload HTML Report Artifact
+      - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coveragereport
+          name: html-coverage-report
+          path: coverage
+
 
 
 
