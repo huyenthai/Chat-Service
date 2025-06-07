@@ -46,7 +46,7 @@ jobs:
       - name: Build and test
         run: |
           dotnet build $PROJECT_PATH --configuration Release
-          dotnet test $TEST_PATH --no-build --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
+          dotnet test $TEST_PATH --configuration Release --collect:"XPlat Code Coverage" --results-directory TestResults
 
       - name: Generate coverage reports
         run: |
