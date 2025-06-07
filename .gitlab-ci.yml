@@ -61,7 +61,6 @@ deploy:
   only:
     - branches
 
-
 sonarcloud:
   stage: sonarcloud
   tags:
@@ -73,7 +72,14 @@ sonarcloud:
     - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - mkdir -p TestResults
-    - dotnet sonarscanner begin /k:"chat-service" /o:"messaging" /d:sonar.login="$SONAR_CLOUD_TOKEN" /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml"
+    - dotnet sonarscanner begin \
+        /k:"chat-service" \
+        /o:"messaging" \
+        /d:sonar.login="$SONAR_CLOUD_TOKEN" \
+        /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.cobertura.xml" \
+        /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/coverage.cobertura.xml" \
+        /d:sonar.cs.cobertura.reportsPaths="TestResults/coverage.cobertura.xml" \
+        /d:sonar.coverage.exclusions="**/*.Tests.cs"
     - dotnet build --configuration Debug
     - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build --collect:"XPlat Code Coverage" --results-directory src/ChatService.Tests/TestResults
     - find src/ChatService.Tests/TestResults -name "coverage.cobertura.xml" -exec cp {} TestResults/coverage.cobertura.xml \;
@@ -81,6 +87,7 @@ sonarcloud:
     - sed -i 's|filename="[^"]*src/ChatService/|filename="src/ChatService/|' TestResults/coverage.cobertura.xml
     - cat TestResults/coverage.cobertura.xml | head -n 20
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
+
 
 
 
