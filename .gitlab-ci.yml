@@ -77,8 +77,8 @@ sonarcloud:
     - dotnet build --configuration Debug
     - dotnet test src/ChatService.Tests/ChatService.Tests.csproj --configuration Debug --no-build --collect:"XPlat Code Coverage" --results-directory src/ChatService.Tests/TestResults
     - find src/ChatService.Tests/TestResults -name "coverage.cobertura.xml" -exec cp {} TestResults/coverage.cobertura.xml \;
-    - sed -i 's|<source>.*src/ChatService.Tests/|<source>src/ChatService.Tests/|' TestResults/coverage.cobertura.xml
-    - sed -i 's|filename="/builds.*/src/ChatService.Tests/|filename="src/ChatService.Tests/|' TestResults/coverage.cobertura.xml
+    - sed -i 's|<source>.*src/ChatService/|<source>src/ChatService/|' TestResults/coverage.cobertura.xml
+    - sed -i 's|filename="[^"]*src/ChatService/|filename="src/ChatService/|' TestResults/coverage.cobertura.xml
     - cat TestResults/coverage.cobertura.xml | head -n 20
     - dotnet sonarscanner end /d:sonar.login="$SONAR_CLOUD_TOKEN"
 
