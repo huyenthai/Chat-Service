@@ -34,8 +34,8 @@ code-quality:
 
     # Install DevSkim CLI manually from GitHub
     - apt-get update && apt-get install -y wget unzip
-    - wget https://github.com/microsoft/DevSkim/releases/download/v1.0.16/DevSkim-CLI_1.0.16_linux-x64.zip
-    - unzip DevSkim-CLI_1.0.16_linux-x64.zip -d devskim
+    - wget https://github.com/microsoft/DevSkim/releases/tag/v1.0.16/DevSkim_CLI_linux_1.0.16.zip
+    - unzip DevSkim_CLI_linux_1.0.16.zip -d devskim
     - chmod +x devskim/DevSkim
     - mkdir -p security-reports
     - ./devskim/DevSkim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
