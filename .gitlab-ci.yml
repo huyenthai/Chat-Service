@@ -22,7 +22,7 @@ build:
   script:
     - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
-
+    
 code-quality:
   stage: analyze
   tags:
@@ -31,9 +31,13 @@ code-quality:
     - export PATH="$PATH:/root/.dotnet/tools"
     - dotnet tool install -g dotnet-format
     - dotnet format --verify-no-changes
+
     - dotnet tool install -g Microsoft.CST.DevSkim.CLI
     - mkdir -p security-reports
-    - devskim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
+    - devskim analyze \
+        -I src/ \
+        -O security-reports/devskim.sarif \
+        -f sarif
   artifacts:
     paths:
       - security-reports/devskim.sarif
