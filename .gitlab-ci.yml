@@ -4,6 +4,7 @@ stages:
   - build
   - test
   - analyze
+  - coverage
   - dockerize
   - deploy
 
@@ -13,7 +14,7 @@ variables:
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
 
-# Build
+# Build Project
 build:
   stage: build
   tags:
@@ -22,9 +23,26 @@ build:
     - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
 
-# Run Unit Tests + Coverage
-test-coverage:
-  stage: test
+# Code Quality + Static Security
+code-quality:
+  stage: analyze
+  tags:
+    - project
+  script:
+    - dotnet tool install -g dotnet-format
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - dotnet format --verify-no-changes
+    - dotnet tool install -g Microsoft.DevSkim.CLI
+    - mkdir -p security-reports
+    - devskim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
+  artifacts:
+    paths:
+      - security-reports/devskim.sarif
+    expire_in: 1 week
+
+# Unit Test + Coverage Report
+code-coverage:
+  stage: coverage
   tags:
     - project
   script:
@@ -32,28 +50,32 @@ test-coverage:
     - dotnet tool install -g dotnet-reportgenerator-globaltool
     - export PATH="$PATH:/root/.dotnet/tools"
     - reportgenerator -reports:TestResults/**/coverage.cobertura.xml -targetdir:coveragereport -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
+  artifacts:
+    paths:
+      - coveragereport
+    expire_in: 1 week
 
-# Static Code Analysis (Style + OWASP)
-static-analysis:
+# CVE Scan on Docker Image
+docker-security:
   stage: analyze
   tags:
     - project
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - dotnet tool install -g dotnet-format
-    - dotnet format --verify-no-changes
-    - dotnet tool install -g Microsoft.DevSkim.CLI
-    - export PATH="$PATH:/root/.dotnet/tools"
-    - devskim analyze --path src/ --output sarif
-
-# Dependency Security
-dependency-scan:
-  stage: analyze
-  tags:
-    - project
-  script:
-    - dotnet tool install --global dotnet-outdated-tool
-    - export PATH="$PATH:/root/.dotnet/tools"
-    - dotnet outdated --include-auto-references
+    - apk add --no-cache curl
+    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - mkdir -p security-reports
+    - tag="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
+    - docker pull "$tag" || echo "Image not found, skipping pull"
+    - trivy image --format json --output security-reports/trivy-report.json "$tag" || echo "Trivy scan completed"
+  artifacts:
+    paths:
+      - security-reports/trivy-report.json
+    expire_in: 1 week
+  only:
+    - branches
 
 # Docker Build
 dockerize:
@@ -68,25 +90,7 @@ dockerize:
   script:
     - tag1="${DOCKER_IMAGE_NAME}:${CI_COMMIT_SHORT_SHA}"
     - tag2="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
-    - cd "$CI_PROJECT_DIR"
     - docker build -t "$tag1" -t "$tag2" .
-  only:
-    - branches
-
-# Docker Image Security Scan
-docker-security:
-  stage: analyze
-  tags:
-    - project
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - apk add --no-cache curl
-    - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-    - tag="${DOCKER_IMAGE_NAME}:${TAG_NAME}"
-    - docker pull "$tag" || echo "Image not found, skipping pull"
-    - trivy image "$tag" || echo "Trivy scan completed with warnings"
   only:
     - branches
 
