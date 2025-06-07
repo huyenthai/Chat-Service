@@ -39,7 +39,6 @@ jobs:
         with:
           name: devskim-report
           path: security-reports/devskim.sarif
-
   code-coverage:
     runs-on: ubuntu-latest
     steps:
@@ -65,12 +64,14 @@ jobs:
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
-            -reporttypes:"Cobertura;HtmlInline_AzurePipelines" \
-            -reportfile:"coverage.xml"
+            -reporttypes:"Cobertura;HtmlInline_AzurePipelines"
 
+      - name: Rename report for Codacy
+        run: mv coverage/Cobertura.xml coverage/coverage.xml
 
       - name: List generated files (debug)
         run: ls -R coverage
+
       - name: Upload coverage to Codacy
         shell: bash
         env:
@@ -96,6 +97,7 @@ jobs:
         with:
           name: html-coverage-report
           path: coverage
+
 
 
 
