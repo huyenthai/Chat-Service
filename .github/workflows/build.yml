@@ -57,7 +57,10 @@ jobs:
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
-            -reporttypes:"Cobertura"
+            -reporttypes:"Cobertura" \
+            -filefilters:"+" \
+            -reportfilename:"coverage.cobertura"
+
 
       - name: End SonarCloud analysis
         run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_CLOUD_TOKEN }}"
