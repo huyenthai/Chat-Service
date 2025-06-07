@@ -29,6 +29,11 @@ namespace ChatService.Business.Services
         {
             return await chatRepository.GetContactUserIdsAsync(userId);
         }
+        public class Calculator
+        {
+            public int Add(int a, int b) => a + b;
+        }
+
 
 
     }
