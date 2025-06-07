@@ -78,9 +78,8 @@ jobs:
           CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
         run: |
           curl -Ls https://coverage.codacy.com/get.sh | bash
-
-          if [ ! -f coverage/coverage.xml ]; then
-            echo "coverage/coverage.xml not found"
+          if [ ! -f coverage/cobertura.xml ]; then
+            echo "coverage/cobertura.xml not found"
             exit 1
           fi
 
