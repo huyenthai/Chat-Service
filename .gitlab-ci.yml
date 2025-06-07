@@ -23,7 +23,6 @@ build:
     - dotnet restore
     - dotnet build $PROJECT_PATH --configuration Release
 
-# Code Quality + Static Security
 code-quality:
   stage: analyze
   tags:
@@ -32,13 +31,14 @@ code-quality:
     - export PATH="$PATH:/root/.dotnet/tools"
     - dotnet tool install -g dotnet-format
     - dotnet format --verify-no-changes
-    - dotnet tool install -g DevSkim.DotNet.CLI
+    - dotnet tool install -g devskim.dotnet.cli
     - mkdir -p security-reports
     - devskim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
   artifacts:
     paths:
       - security-reports/devskim.sarif
     expire_in: 1 week
+
 
 # Unit Test + Coverage Report
 code-coverage:
