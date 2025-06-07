@@ -40,31 +40,52 @@ jobs:
           name: devskim-report
           path: security-reports/devskim.sarif
 
-  code-coverage:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-      - run: dotnet test ${{ env.TEST_PATH }} --collect:"XPlat Code Coverage" --results-directory TestResults
-      - run: dotnet tool install -g dotnet-reportgenerator-globaltool
-      - run: |
-          reportgenerator -reports:TestResults/**/coverage.cobertura.xml \
-                          -targetdir:coveragereport \
-                          -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
-      - name: Upload coverage to Codacy
-        shell: bash
-        env:
-          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
-        run: |
-          curl -Ls https://coverage.codacy.com/get.sh | bash
-          ./codacy-coverage-reporter report \
-            -r TestResults/**/coverage.cobertura.xml
-      - uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: coveragereport
+code-coverage:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Run Tests with Coverage
+      run: dotnet test ${{ env.TEST_PATH }} --collect:"XPlat Code Coverage" --results-directory TestResults
+
+    - name: Install ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Generate Cobertura Report
+      run: |
+        reportgenerator \
+          -reports:TestResults/**/coverage.cobertura.xml \
+          -targetdir:coveragereport \
+          -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
+
+    - name: Upload coverage to Codacy
+      shell: bash
+      env:
+        CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+      run: |
+        curl -Ls https://coverage.codacy.com/get.sh | bash
+
+        # Find the actual report file
+        REPORT_FILE=$(find TestResults -type f -name 'coverage.cobertura.xml' | head -n 1)
+
+        if [ -z "$REPORT_FILE" ]; then
+          echo " Coverage report not found"
+          exit 1
+        fi
+
+        echo " Found coverage report: $REPORT_FILE"
+        ./codacy-coverage-reporter report -r "$REPORT_FILE"
+
+    - name: Upload HTML Report Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coveragereport
+
 
 
   docker-security:
