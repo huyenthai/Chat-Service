@@ -32,7 +32,7 @@ code-quality:
     - dotnet tool install -g dotnet-format
     - export PATH="$PATH:/root/.dotnet/tools"
     - dotnet format --verify-no-changes
-    - dotnet tool install -g Microsoft.DevSkim.CLI
+    - dotnet tool install -g DevSkim.DotNet.CLI
     - mkdir -p security-reports
     - devskim analyze --path src/ --output-file security-reports/devskim.sarif --format sarif
   artifacts:
