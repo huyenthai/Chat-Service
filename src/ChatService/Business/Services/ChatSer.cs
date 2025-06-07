@@ -19,17 +19,23 @@ namespace ChatService.Business.Services
         public async Task SendMessageAsync(ChatMessage message)
         {
             if (message == null || string.IsNullOrWhiteSpace(message.ReceiverId))
+            {
                 throw new ArgumentException("Invalid message or receiver ID");
+            }
             await chatRepository.SaveMessageSync(message);
-            await hub.Clients
-                .User(message.ReceiverId)
-                .SendAsync("ReceiveMessage", message);
+            var client = hub.Clients.User(message.ReceiverId);
+            if (client != null)
+            {
+                await client.SendAsync("ReceiveMessage", message);
+            }
         }
 
         public async Task<List<ChatMessage>> GetChatHistoryAsync(string senderId, string receiverId)
         {
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId))
+            {
                 throw new ArgumentException("Sender and Receiver IDs must be provided");
+            }
 
             return await chatRepository.GetMessageAsync(senderId, receiverId);
         }
@@ -37,7 +43,9 @@ namespace ChatService.Business.Services
         public async Task<List<string>> GetChatContactsAsync(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
+            {
                 throw new ArgumentException("User ID is required");
+            }
             return await chatRepository.GetContactUserIdsAsync(userId);
         }
     }

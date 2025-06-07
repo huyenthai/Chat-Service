@@ -32,14 +32,16 @@ namespace ChatService.Controllers
 
             var senderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
             if (string.IsNullOrWhiteSpace(senderId))
+            {
                 return Unauthorized("Sender not authenticated.");
+            }
 
             var message = new ChatMessage
             {
                 SenderId = senderId,
-                ReceiverId = dto.ReceiverId.Trim(),
-                Message = dto.Message,
-                BlobName = dto.BlobName,
+                ReceiverId = dto.ReceiverId?.Trim() ?? "",
+                Message = dto.Message ?? "",
+                BlobName = dto.BlobName ?? "",
                 MessageType = dto.MessageType,
                 TimeSent = DateTime.UtcNow
             };
@@ -55,12 +57,16 @@ namespace ChatService.Controllers
         {
             var senderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
             if (string.IsNullOrWhiteSpace(receiverId))
+            {
                 return BadRequest("Receiver ID is required");
+            }
 
             receiverId = receiverId.Trim();
 
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId))
+            {
                 return BadRequest("Invalid sender or receiver");
+            }
 
             var chatHistory = await chatService.GetChatHistoryAsync(senderId, receiverId);
             return Ok(chatHistory);
@@ -71,7 +77,9 @@ namespace ChatService.Controllers
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
             if (string.IsNullOrWhiteSpace(currentUserId))
+            {
                 return Unauthorized("User not authenticated");
+            }
 
             var contactIds = await chatService.GetChatContactsAsync(currentUserId);
             return Ok(contactIds);

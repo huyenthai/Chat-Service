@@ -30,6 +30,10 @@ namespace ChatService.Repositories
 
         public async Task SaveMessageSync(ChatMessage message)
         {
+            if (message == null)
+            {
+                throw new ArgumentNullException(nameof(message), "Message cannot be null.");
+            }
             await chatCollection.InsertOneAsync(message);
         }
         public async Task<List<string>> GetContactUserIdsAsync(string userId)
