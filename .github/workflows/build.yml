@@ -1,76 +1,139 @@
-name: CI/CD with SonarCloud
+name: CI/CD Pipeline
 
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [opened, synchronize, reopened]
 
 env:
+  DOCKER_IMAGE_NAME: huyenthai01/chat-service
   PROJECT_PATH: src/ChatService/ChatService.csproj
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
-  DOCKER_IMAGE_NAME: huyenthai01/chat-service
   TAG_NAME: latest
 
 jobs:
-  build-and-analyze:
+
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet tool install -g dotnet-format
+      - run: dotnet format --verify-no-changes
+      - run: dotnet tool install -g Microsoft.CST.DevSkim.CLI
+      - run: |
+          mkdir -p security-reports
+          devskim analyze -I src/ -O security-reports/devskim.sarif -f sarif
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devskim-report
+          path: security-reports/devskim.sarif
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      - name: Install tools
+      - name: Run Tests with Coverage
         run: |
-          dotnet tool install --global dotnet-sonarscanner
-          dotnet tool install --global dotnet-reportgenerator-globaltool
-        env:
-          DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-
-      - name: Add dotnet tools to PATH
-        run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
-
-      - name: Begin SonarCloud analysis
-        run: |
-          dotnet sonarscanner begin \
-            /k:"chat-service" \
-            /o:"messaging" \
-            /d:sonar.login="${{ secrets.SONAR_CLOUD_TOKEN }}" \
-            /d:sonar.cs.cobertura.reportsPaths="coverage/coverage.cobertura.xml"
-
-      - name: Build and test with coverage
-        run: |
-          dotnet build ${{ env.PROJECT_PATH }} --configuration Release
           dotnet test ${{ env.TEST_PATH }} \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
             --results-directory TestResults
 
-      - name: Generate Cobertura coverage report
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+      - name: Generate Cobertura Report
         run: |
           mkdir -p coverage
           reportgenerator \
             -reports:"TestResults/**/coverage.cobertura.xml" \
             -targetdir:"coverage" \
-            -reporttypes:"Cobertura" \
-            -filefilters:"+" \
-            -reportfilename:"coverage.cobertura"
+            -reporttypes:"Cobertura;HtmlInline_AzurePipelines"
+
+      - name: List generated files (debug)
+        run: ls -R coverage
+
+      - name: Upload coverage to Codacy
+        shell: bash
+        env:
+          CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+        run: |
+          curl -Ls https://coverage.codacy.com/get.sh | bash
+
+          if [ ! -f coverage/Cobertura.xml ]; then
+            echo "coverage/Cobertura.xml not found"
+            exit 1
+          fi
+
+          echo "Found Cobertura report"
+          ./codacy-coverage-reporter report -r coverage/Cobertura.xml
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: html-coverage-report
+          path: coverage
 
 
-      - name: End SonarCloud analysis
-        run: dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_CLOUD_TOKEN }}"
+
+
+
+  docker-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Run Trivy Scan
+        run: |
+          mkdir -p security-reports
+          tag="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
+          docker pull "$tag" || echo "Image not found, skipping pull"
+          trivy image --format json --output security-reports/trivy-report.json "$tag" || echo "Trivy scan completed"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: security-reports/trivy-report.json
+
+  docker-image-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE="${{ env.DOCKER_IMAGE_NAME }}:$SHORT_SHA"
+          LATEST="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
+          docker build -t "$IMAGE" -t "$LATEST" .
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
 
-      - name: Build and Push Docker Image
+      - name: Push Docker image
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          docker build -t $DOCKER_IMAGE_NAME:$SHORT_SHA -t $DOCKER_IMAGE_NAME:$TAG_NAME .
-          docker push $DOCKER_IMAGE_NAME:$SHORT_SHA
-          docker push $DOCKER_IMAGE_NAME:$TAG_NAME
+          docker push "${{ env.DOCKER_IMAGE_NAME }}:$SHORT_SHA"
+          docker push "${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
+
+
