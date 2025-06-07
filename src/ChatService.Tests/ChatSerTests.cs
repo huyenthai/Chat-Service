@@ -42,17 +42,27 @@ namespace ChatService.Tests
                                                          It.Is<object[]>(o => o[0] == message),
                                                          default), Times.Once);
         }
-
         [Fact]
         public async Task GetChatHistoryAsync_ReturnsMessages()
         {
-            var expectedMessages = new List<ChatMessage> { new ChatMessage { Message = "Hi" } };
+            var expectedMessages = new List<ChatMessage>
+            {
+                new ChatMessage
+                {
+                    Message = "Hi",
+                    SenderId = "user1",
+                    ReceiverId = "user2"
+                }
+            };
+
             mockRepo.Setup(r => r.GetMessageAsync("user1", "user2")).ReturnsAsync(expectedMessages);
 
             var result = await chatService.GetChatHistoryAsync("user1", "user2");
 
             Assert.Equal(expectedMessages, result);
         }
+
+
 
         [Fact]
         public async Task GetChatContactsAsync_ReturnsContactIds()
