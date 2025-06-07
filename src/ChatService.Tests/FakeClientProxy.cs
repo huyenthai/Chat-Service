@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ChatService.Tests
 {
-    public class FakeClientProxy: IClientProxy
+    public class FakeClientProxy : IClientProxy
     {
         public string? LastMethod { get; private set; }
         public object?[] LastArgs { get; private set; }
