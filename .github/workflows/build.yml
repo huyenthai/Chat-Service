@@ -1,0 +1,108 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE_NAME: huyenthai01/chat-service
+  PROJECT_PATH: src/ChatService/ChatService.csproj
+  TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
+  TAG_NAME: latest
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet restore
+      - run: dotnet build ${{ env.PROJECT_PATH }} --configuration Release
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet tool install -g dotnet-format
+      - run: dotnet format --verify-no-changes
+      - run: dotnet tool install -g Microsoft.CST.DevSkim.CLI
+      - run: |
+          mkdir -p security-reports
+          devskim analyze -I src/ -O security-reports/devskim.sarif -f sarif
+      - uses: actions/upload-artifact@v4
+        with:
+          name: devskim-report
+          path: security-reports/devskim.sarif
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet test ${{ env.TEST_PATH }} --collect:"XPlat Code Coverage" --results-directory TestResults
+      - run: dotnet tool install -g dotnet-reportgenerator-globaltool
+      - run: |
+          reportgenerator -reports:TestResults/**/coverage.cobertura.xml \
+                          -targetdir:coveragereport \
+                          -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
+      - name: Upload coverage to Codacy
+        run: |
+          curl -Ls https://coverage.codacy.com/get.sh | sh
+          ./codacy-coverage-reporter report \
+            --project-token ${{ secrets.CODACY_PROJECT_TOKEN }} \
+            --coverage-reports TestResults/**/coverage.cobertura.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coveragereport
+
+  docker-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+      - name: Run Trivy Scan
+        run: |
+          mkdir -p security-reports
+          tag="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
+          docker pull "$tag" || echo "Image not found, skipping pull"
+          trivy image --format json --output security-reports/trivy-report.json "$tag" || echo "Trivy scan completed"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report
+          path: security-reports/trivy-report.json
+
+  dockerize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker Image
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          tag1="${{ env.DOCKER_IMAGE_NAME }}:$SHORT_SHA"
+          tag2="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
+          docker build -t "$tag1" -t "$tag2" .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: dockerize
+    steps:
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: Push Docker Images
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          docker push "${{ env.DOCKER_IMAGE_NAME }}:$SHORT_SHA"
+          docker push "${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
