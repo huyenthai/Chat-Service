@@ -23,8 +23,12 @@ namespace ChatService.Controllers
         {
             Console.WriteLine("Hit SendMessages endpoint");
 
-            if (dto == null || string.IsNullOrWhiteSpace(dto.ReceiverId))
-                return BadRequest("ReceiverId and message cannot be null.");
+            if (dto == null ||
+                string.IsNullOrWhiteSpace(dto.ReceiverId) ||
+                string.IsNullOrWhiteSpace(dto.MessageType))
+            {
+                return BadRequest("Missing required fields.");
+            }
 
             var senderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
             if (string.IsNullOrWhiteSpace(senderId))
@@ -50,7 +54,10 @@ namespace ChatService.Controllers
         public async Task<IActionResult> GetChatHistory([FromQuery] string receiverId)
         {
             var senderId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value?.Trim();
-            receiverId = receiverId?.Trim();
+            if (string.IsNullOrWhiteSpace(receiverId))
+                return BadRequest("Receiver ID is required");
+
+            receiverId = receiverId.Trim();
 
             if (string.IsNullOrWhiteSpace(senderId) || string.IsNullOrWhiteSpace(receiverId))
                 return BadRequest("Invalid sender or receiver");
