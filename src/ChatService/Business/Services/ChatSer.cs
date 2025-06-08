@@ -40,6 +40,7 @@ namespace ChatService.Business.Services
             return await chatRepository.GetMessageAsync(senderId, receiverId);
         }
 
+
         public async Task<List<string>> GetChatContactsAsync(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))

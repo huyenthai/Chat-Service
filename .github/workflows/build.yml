@@ -101,6 +101,7 @@ jobs:
 
   docker-security:
     runs-on: ubuntu-latest
+    needs: docker-image-and-push 
     steps:
       - uses: actions/checkout@v3
       - name: Install Trivy
