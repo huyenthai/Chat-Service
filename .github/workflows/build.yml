@@ -9,6 +9,9 @@ env:
   PROJECT_PATH: src/ChatService/ChatService.csproj
   TEST_PATH: src/ChatService.Tests/ChatService.Tests.csproj
   TAG_NAME: latest
+#Needs for CodeQL SARIF uploads
+permissions:
+  security-events: write 
 
 jobs:
 
@@ -39,6 +42,7 @@ jobs:
         with:
           name: devskim-report
           path: security-reports/devskim.sarif
+
   code-coverage:
     runs-on: ubuntu-latest
     steps:
@@ -91,39 +95,80 @@ jobs:
             --commit-uuid ${{ github.sha }} \
             --language CSharp \
             -r coverage/cobertura.xml
-
-
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: html-coverage-report
           path: coverage
 
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: github/codeql-action/init@v2
+        with:
+          languages: csharp
+      - uses: github/codeql-action/analyze@v2
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Gitleaks to detect secrets
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          fail: false  # allow pipeline to continue even if secrets are found
+
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Lint Dockerfile with hadolint
+        run: |
+          wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          chmod +x /usr/local/bin/hadolint
+          hadolint Dockerfile
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "ChatService"
+          format: "HTML"
+          out: "dependency-check-report"
+      - name: Upload Dependency Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-report
+          path: dependency-check-report
+
+
   docker-security:
     runs-on: ubuntu-latest
     needs: docker-image-and-push
     steps:
       - uses: actions/checkout@v3
-
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-
-      - name: Run Trivy Scan
+      - name: Run Trivy Scan (SARIF + HTML)
         run: |
           mkdir -p security-reports
           tag="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
           docker pull "$tag"
-          trivy image --format json --output security-reports/trivy-report.json "$tag"
-
-      - uses: actions/upload-artifact@v4
+          trivy image --format sarif --output security-reports/trivy-report.sarif "$tag"
+          trivy image --format template --template "@contrib/html.tpl" -o security-reports/trivy-report.html "$tag"
+      - name: Upload Trivy Reports
+        uses: actions/upload-artifact@v4
         with:
-          name: trivy-report
-          path: security-reports/trivy-report.json
-
+          name: trivy-security-reports
+          path: security-reports
 
 
   docker-image-and-push:
