@@ -101,22 +101,29 @@ jobs:
 
   docker-security:
     runs-on: ubuntu-latest
-    needs: docker-image-and-push 
+    needs: docker-image-and-push
     steps:
       - uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
       - name: Run Trivy Scan
         run: |
           mkdir -p security-reports
           tag="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
-          docker pull "$tag" || echo "Image not found, skipping pull"
-          trivy image --format json --output security-reports/trivy-report.json "$tag" || echo "Trivy scan completed"
+          docker pull "$tag"
+          trivy image --format json --output security-reports/trivy-report.json "$tag"
+
       - uses: actions/upload-artifact@v4
         with:
           name: trivy-report
           path: security-reports/trivy-report.json
+
 
 
   docker-image-and-push:
