@@ -108,6 +108,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: csharp
+          queries: +security-and-quality
       - name: Restore and Build
         run: |
           dotnet restore
@@ -133,13 +134,31 @@ jobs:
 
   hadolint:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
       - uses: actions/checkout@v3
-      - name: Lint Dockerfile with hadolint
+
+      - name: Install Hadolint
         run: |
           wget -O /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
           chmod +x /usr/local/bin/hadolint
-          hadolint Dockerfile
+
+      - name: Run Hadolint and output SARIF
+        run: |
+          hadolint Dockerfile --format sarif > hadolint-results.sarif || true
+
+      - name: Upload Hadolint SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: hadolint-results.sarif
+
+      - name: Upload SARIF as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-sarif-report
+          path: hadolint-results.sarif
+
 
   dependency-check:
     runs-on: ubuntu-latest
