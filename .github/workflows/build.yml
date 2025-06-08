@@ -42,6 +42,11 @@ jobs:
         with:
           name: devskim-report
           path: security-reports/devskim.sarif
+      - name: Upload DevSkim SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: security-reports/devskim.sarif
+
 
   code-coverage:
     runs-on: ubuntu-latest
@@ -106,19 +111,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: github/codeql-action/init@v2
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
         with:
           languages: csharp
-      - uses: github/codeql-action/analyze@v2
+
+      - name: Restore and Build
+        run: |
+          dotnet restore
+          dotnet build ${{ env.PROJECT_PATH }} --configuration Release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
 
   gitleaks:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
     steps:
       - uses: actions/checkout@v3
+
       - name: Run Gitleaks to detect secrets
         uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
         with:
-          fail: false  # allow pipeline to continue even if secrets are found
+          args: detect --redact -v --report-format=sarif --report-path=results.sarif
+
+      - name: Upload Gitleaks SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: results.sarif
+
 
   hadolint:
     runs-on: ubuntu-latest
@@ -162,14 +192,20 @@ jobs:
           mkdir -p security-reports
           tag="${{ env.DOCKER_IMAGE_NAME }}:${{ env.TAG_NAME }}"
           docker pull "$tag"
+          curl -sL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o html.tpl
           trivy image --format sarif --output security-reports/trivy-report.sarif "$tag"
-          trivy image --format template --template "@contrib/html.tpl" -o security-reports/trivy-report.html "$tag"
+          trivy image --format template --template "@html.tpl" -o security-reports/trivy-report.html "$tag"
+
       - name: Upload Trivy Reports
         uses: actions/upload-artifact@v4
         with:
           name: trivy-security-reports
           path: security-reports
-
+          
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: security-reports/trivy-report.sarif
 
   docker-image-and-push:
     runs-on: ubuntu-latest

@@ -11,8 +11,12 @@ WORKDIR /src
 COPY . .
 
 # Restore and publish
-RUN dotnet restore "./ChatService.sln"
-RUN dotnet publish "./src/ChatService/ChatService.csproj" -c Release -o /app/publish
+# AFTER (recommended)
+RUN dotnet restore "./ChatService.sln" && \
+    dotnet publish "./src/ChatService/ChatService.csproj" -c Release -o /app/publish
+
+# RUN dotnet restore "./ChatService.sln"
+# RUN dotnet publish "./src/ChatService/ChatService.csproj" -c Release -o /app/publish
 
 # Final stage
 FROM base AS final
