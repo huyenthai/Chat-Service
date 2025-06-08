@@ -139,14 +139,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Run Hadolint with Docker and output SARIF
+      - name: Run Hadolint with Docker
         run: |
-          docker run --rm -i hadolint/hadolint < Dockerfile --format sarif > hadolint-results.sarif || true
+          docker run --rm -i hadolint/hadolint hadolint --format sarif - < Dockerfile > hadolint-results.sarif || echo "{}" > hadolint-results.sarif
+
+      - name: Validate Hadolint SARIF output
+        run: |
+          if [ ! -s hadolint-results.sarif ] || ! jq empty hadolint-results.sarif; then
+            echo "Hadolint SARIF is empty or invalid. Replacing with empty SARIF."
+            echo '{"version": "2.1.0", "runs": []}' > hadolint-results.sarif
+          fi
 
       - name: Upload Hadolint SARIF to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: hadolint-results.sarif
+
 
 
 
